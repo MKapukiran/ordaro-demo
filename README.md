@@ -43,18 +43,54 @@ flowchart LR
 | **Brevo** | Transactional signature emails |
 | **Google Calendar** | Calendar availability |
 
-## Demo scope
+## Setup overview
 
-The prototype focuses on external integrations, deterministic data validation, case persistence, human approval, and an agreement-signing workflow. An AI-assisted coaching preparation or error-diagnosis step is an **optional extension**, not an automated business decision.
+The demonstration uses a self-hosted n8n instance and accounts or test environments for Calendly, Notion, Slack, DocuSeal, Google Calendar, and Brevo.
 
-**Current limitations:** Some integrations have been tested individually, but full negative-path and recovery testing is still ongoing. In particular, cross-system exactly-once guarantees, concurrent processing, and the complete calendar-blocking rejection path are not claimed as production-verified. Demo examples should use synthetic data.
+1. Configure the relevant integrations using n8n's **credential manager**; do not paste tokens into workflow JSON or GitHub.
+2. Configure the Calendly booking source and Notion case database, including the expected fields and statuses.
+3. Connect the main booking workflow to its approval subworkflow and select the intended Slack review destination.
+4. Configure the DocuSeal agreement template and its transactional email delivery; verify the calendar used for booking conflicts before enabling rejection automation.
+5. Use **synthetic test bookings** to verify the happy path and failure paths before enabling unattended execution.
 
-## Next steps
+**Availability:** The operational n8n exports, credentials, private case database, and instance-specific configuration are **not published in this showcase repository**. This is a setup overview, not a one-click deployment guide.
 
-- Complete end-to-end happy-path and failure-case tests.
-- Verify calendar blocking and cancellation behavior.
-- Improve error monitoring and recovery without adding unnecessary complexity.
-- Prepare the final course demonstration and handover.
+## Results and current verification
+
+The following observations are based on development testing and operator reports, not an independently audited production rollout.
+
+| Area | Observed result | Remaining verification |
+| --- | --- | --- |
+| Booking intake | Calendly API reads bookings and invitee details | Multi-booking replay and edge cases |
+| Case records | Notion cases and relevant booking information have been created | Concurrent writes and complete recovery |
+| Human review | Slack-based approve/reject interactions have been exercised | Repeated or stale decision handling |
+| Agreements | DocuSeal creates personalized signature requests; email receipt via Brevo has been reported | Final English template and complete signing lifecycle |
+| Rejection | Calendar blocking and cancellation path designed | Full block → verify → cancel live test |
+| Error handling | Validation and error reporting paths designed | Automated failure notification and recovery tests |
+
+No quantitative time savings, production delivery reliability, or exactly-once guarantees are claimed.
+
+## Technical decisions and business value
+
+- **Use existing services:** n8n connects tools already suited to scheduling, records, notifications, and signing instead of introducing a custom backend.
+- **Keep critical decisions human-controlled:** Slack provides a review step before consequential actions.
+- **Use deterministic logic where possible:** Validation, identifiers, prices, and status transitions should not depend on model-generated guesses.
+- **Use Notion for the course prototype:** It is quick to inspect and demonstrate, but it is not a transactional database with guaranteed atomic state transitions.
+- **Keep AI optional and bounded:** Potential AI support can summarize coaching requests or suggest error diagnostics. It is not required for business decisions or the demonstrated baseline.
+
+For a business audience, the value is fewer manual handoffs and clearer case visibility. For a technical reviewer, the key design questions are safe integration boundaries, error handling, privacy, and what has actually been tested.
+
+## Limitations and next steps
+
+This is a **course prototype**, not a production-ready client management system. Cross-system partial failures, safe retries, concurrent approvals, and the end-to-end calendar-blocking rejection path require further hardening and verification.
+
+- Complete positive and negative end-to-end test cases.
+- Verify the rejection path and signing lifecycle.
+- Test centralized error alerts and recovery scenarios.
+- Add anonymized screenshots of the actual n8n canvas and case/review UI after checking them for sensitive information.
+- Prepare the final demo and handover.
+
+**n8n editor documentation:** Helpful node descriptions and sticky notes are part of the course requirement. Their completeness in the latest deployed workflow has **not** been independently verified by this public README.
 
 ---
 
